@@ -1,0 +1,5 @@
+{
+    "jwtPrivateKey": "abc",
+    "db": "mongodb://localhost/cold_storage_test"
+  }
+  
