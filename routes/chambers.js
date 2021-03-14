@@ -6,7 +6,7 @@ const validator = require("../middleware/validate");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 
-// Create a Chmaber for request with id, method = POST
+// Create a Chamber for request with id, method = POST
 router.post("/", [auth, validator(validate)], async (req, res) => {
   //Create Chamber object
   let slug = req.body.name.trim().replace(/\s+/g, "-").toLowerCase();
@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
     .select("name slug capacity")
     .limit(perPage)
     .skip(perPage * page)
-    .sort({ priority: "asc" });
+    .sort({ name: "asc" });
 
   res.send(chambers);
 });
