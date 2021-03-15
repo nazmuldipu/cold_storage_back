@@ -7,6 +7,7 @@ const validateObjectId = require("../middleware/validateObjectId");
 const validator = require("../middleware/validate");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
+const pagiCheck = require("../middleware/paginations");
 
 //------------------User profile-----------------
 router.get("/me", auth, async (req, res) => {
@@ -56,6 +57,7 @@ router.put(
           name: req.body.name,
           email: req.body.email,
           phone: req.body.phone,
+          role: req.body.role,
         },
       }
     );
@@ -64,13 +66,32 @@ router.put(
 );
 
 /*READ all user for request with method = GET*/
-router.get("/", [auth, admin], async (req, res) => {
-  const users = await User.find({}, "name phone email roles");
-  return res.send(users);
+router.get("/", [auth, pagiCheck], async (req, res) => {
+  const param = req.query.param;
+
+  var query = param
+    ? {
+        $or: [
+          { name: { $regex: param } },
+          { phone: { $regex: param } },
+          { email: { $regex: param } },
+        ],
+      }
+    : {};
+
+  const options = {
+    select: "name phone email role",
+    sort: req.query.sort,
+    page: req.query.page,
+    limit: req.query.limit,
+  };
+  const users = await User.paginate(query, options);
+  res.send(users);
 });
 
 /*READ a User for request with id, method = GET*/
-router.get("/:id", [auth, admin, validateObjectId], async (req, res) => {
+router.get("/:id", [auth, validateObjectId], async (req, res) => {
+  var query = {};
   const user = await User.findById(req.params.id);
   if (!user)
     return res.status(404).send("The user with the given ID was not found");

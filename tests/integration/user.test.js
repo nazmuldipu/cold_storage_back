@@ -171,12 +171,6 @@ describe("/api/users", () => {
       expect(resp.status).toBe(401);
     });
 
-    it("should return 403 if user is not admin", async () => {
-      token = new User({ role: "USER" }).generateAuthToken();
-      const resp = await exec();
-      expect(resp.status).toBe(403);
-    });
-
     it("should return 404 if invalid id is passed", async () => {
       id = 1323;
       const res = await exec();
@@ -219,13 +213,6 @@ describe("/api/users", () => {
       expect(resp.status).toBe(400);
     });
 
-    it("should return 403 if user is not admin", async () => {
-      token = new User().generateAuthToken();
-      const resp = await exec();
-
-      expect(resp.status).toBe(403);
-    });
-
     it("should return all users", async () => {
       const users = [
         {
@@ -247,9 +234,9 @@ describe("/api/users", () => {
       const res = await exec();
 
       expect(res.status).toBe(200);
-      expect(res.body.length).toBe(2);
-      expect(res.body.some((g) => g.name === "user1")).toBeTruthy();
-      expect(res.body.some((g) => g.name === "user2")).toBeTruthy();
+      expect(res.body.docs.length).toBe(2);
+      expect(res.body.docs.some((g) => g.name === "user1")).toBeTruthy();
+      expect(res.body.docs.some((g) => g.name === "user2")).toBeTruthy();
     });
   });
 
@@ -282,12 +269,6 @@ describe("/api/users", () => {
       token = "";
       const resp = await exec();
       expect(resp.status).toBe(401);
-    });
-
-    it("should return 403 if user is not valid", async () => {
-      token = new User({ role: "USER" }).generateAuthToken();
-      const resp = await exec();
-      expect(resp.status).toBe(403);
     });
 
     it("should return a user if valid id is passed", async () => {

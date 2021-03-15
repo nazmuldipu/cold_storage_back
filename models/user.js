@@ -2,6 +2,7 @@ const config = require("config");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const Joi = require("joi");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -49,6 +50,7 @@ userSchema.methods.generateAuthToken = function () {
   return token;
 };
 
+userSchema.plugin(mongoosePaginate);
 const User = mongoose.model("User", userSchema);
 
 function validateUser(user) {
@@ -60,6 +62,7 @@ function validateUser(user) {
       .required(),
     email: Joi.string().min(5).max(60).required().email(),
     password: Joi.string().min(5).max(255).required(),
+    role: Joi.string(),
   });
   return schema.validate(user);
 }

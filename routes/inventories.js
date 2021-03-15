@@ -7,7 +7,8 @@ const validateObjectId = require("../middleware/validateObjectId");
 const validator = require("../middleware/validate");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const { required } = require("joi");
+const pagiCheck = require("../middleware/paginations");
+const _ = require("lodash");
 
 // Create a Inventory for request with id, method = POST
 router.post("/", [auth, validator(validate)], async (req, res) => {
@@ -17,13 +18,10 @@ router.post("/", [auth, validator(validate)], async (req, res) => {
   if (!agent || !agent.phone) {
     //If not agent provided then save customer info as customer
     const dbCustomer = await Customer.findOne({
-      $or: [
-        { phone: customer.phone },
-        {
-          $and: [{ name: customer.name }, { father: customer.father }],
-        },
-      ],
+      name: customer.name,
+      father: customer.father,
     });
+
     if (!dbCustomer) {
       //Save customer
       customer = new Customer({
@@ -42,6 +40,7 @@ router.post("/", [auth, validator(validate)], async (req, res) => {
       return res
         .status(404)
         .send("The Agent with the given phone could not found");
+    else agent = dbAgent;
   }
 
   //Create Inventory object
@@ -52,10 +51,13 @@ router.post("/", [auth, validator(validate)], async (req, res) => {
     sr_no: req.body.sr_no,
     name: req.body.name.trim(),
     customer: customer,
-    agent: agent,
     year: req.body.year,
     quantity: req.body.quantity,
   });
+
+  if (!_.isEmpty(agent)) {
+    inventory.agent = agent;
+  }
 
   let old_inventory = await Inventory.findOne({
     vouchar_no: req.body.vouchar_no,
@@ -73,16 +75,67 @@ router.post("/", [auth, validator(validate)], async (req, res) => {
 });
 
 /*READ all Inventory for request with method = GET*/
-router.get("/", async (req, res) => {
-  let perPage = 8;
-  let page = Math.max(0, req.params.page);
+router.get("/", [auth, pagiCheck], async (req, res) => {
+  const param = req.query.param;
 
-  const inventories = await Inventory.find()
-    .select("date vouchar_no sr_no customer agent year quantity")
-    .limit(perPage)
-    .skip(perPage * page)
-    .sort({ vouchar_no: "asc" });
+  var query = param
+    ? {
+        $or: [
+          { sr_no: { $regex: param } },
+          { "customer.name": { $regex: param } },
+          { "customer.phone": { $regex: param } },
+          { "agent.phone": { $regex: param } },
+        ],
+      }
+    : {};
 
+  const options = {
+    select: "date vouchar_no sr_no customer agent year quantity",
+    sort: req.query.sort,
+    page: req.query.page,
+    limit: req.query.limit,
+  };
+
+  const inventories = await Inventory.paginate(query, options);
+  res.send(inventories);
+});
+
+//TODO: write test
+/*COUNT total inventory, method = GET*/
+router.get("/count", auth, async (req, res) => {
+  const count = await Inventory.countDocuments({});
+  res.send({ count });
+});
+
+//TODO: write test
+/*GET Inventorylist by agent ID*/
+router.get("/agent/:id", auth, async (req, res) => {
+  const inventories = await Inventory.find({ "agent._id": req.params.id });
+  res.send(inventories);
+});
+
+//TODO: write test
+/*GET Inventorylist by customer ID*/
+router.get("/customer/:id", auth, async (req, res) => {
+  const inventories = await Inventory.find({ "customer._id": req.params.id });
+  res.send(inventories);
+});
+
+//TODO: write test
+/*GET Inventorylist by date range ID*/
+router.get("/daterange", [auth, pagiCheck], async (req, res) => {
+  var query = {
+    date: { $gte: req.query.start, $lte: req.query.end },
+  };
+
+  const options = {
+    select: "date vouchar_no sr_no customer agent year quantity",
+    sort: req.query.sort,
+    page: req.query.page,
+    limit: 2000,
+  };
+
+  const inventories = await Inventory.paginate(query, options);
   res.send(inventories);
 });
 
@@ -165,10 +218,11 @@ router.delete("/:id", [auth, admin, validateObjectId], async (req, res) => {
   const inventory = await Inventory.findByIdAndRemove(req.params.id);
 
   if (!inventory)
-    return res.status(404).send("The Inventory with the given ID was not found");
+    return res
+      .status(404)
+      .send("The Inventory with the given ID was not found");
 
   res.send(inventory);
 });
-
 
 module.exports = router;

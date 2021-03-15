@@ -7,7 +7,10 @@ const customerRoutes = require("../routes/customers");
 const error = require("../middleware/error");
 const authRoutes = require("../routes/auth");
 
+const accesscontrol = require("../middleware/accesscontrol");
+
 module.exports = function (app) {
+  app.use(accesscontrol);
   app.use(express.json());
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);

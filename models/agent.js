@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const agentSchema = new mongoose.Schema({
   name: {
@@ -15,7 +16,7 @@ const agentSchema = new mongoose.Schema({
   father: {
     type: String,
     required: true,
-    minlength: 5,
+    minlength: 3,
     maxlength: 50,
   },
   phone: {
@@ -45,6 +46,7 @@ const agentSchema = new mongoose.Schema({
   },
 });
 
+agentSchema.plugin(mongoosePaginate);
 const Agent = mongoose.model("Agent", agentSchema);
 
 function validateAgent(agent) {

@@ -5,6 +5,7 @@ const validateObjectId = require("../middleware/validateObjectId");
 const validator = require("../middleware/validate");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
+const pagiCheck = require("../middleware/paginations");
 
 // Create a Agent for request with id, method = POST
 router.post("/", [auth, validator(validate)], async (req, res) => {
@@ -30,16 +31,27 @@ router.post("/", [auth, validator(validate)], async (req, res) => {
 });
 
 /*READ all Agent for request with method = GET*/
-router.get("/", async (req, res) => {
-  let perPage = 8;
-  let page = Math.max(0, req.params.page);
+router.get("/", [auth, pagiCheck], async (req, res) => {
+  const param = req.query.param;
 
-  const agents = await Agent.find()
-    .select("name phone father address")
-    .limit(perPage)
-    .skip(perPage * page)
-    .sort({ name: "asc" });
+  var query = param
+    ? {
+        $or: [
+          { name: { $regex: param } },
+          { phone: { $regex: param } },
+          { father: { $regex: param } },
+        ],
+      }
+    : {};
 
+  const options = {
+    select: "name phone father address",
+    sort: req.query.sort,
+    page: req.query.page,
+    limit: req.query.limit,
+  };
+
+  const agents = await Agent.paginate(query, options);
   res.send(agents);
 });
 
