@@ -21,14 +21,16 @@ const customerSchema = new mongoose.Schema({
   },
   phone: {
     type: String /*required by default**/,
-    unique: true,
-    sparse: true,
     validate: {
       validator: function (v) {
         var re = /^01[3-9][ ]?[0-9]{2}[ ]?[0-9]{3}[ ]?[0-9]{3}$/;
         return v == null || v.trim().length < 1 || re.test(v);
       },
       message: "Provided phone number is invalid.",
+    },
+    index: {
+      unique: true,
+      partialFilterExpression: { email: { $type: "string" } },
     },
   },
   address: {

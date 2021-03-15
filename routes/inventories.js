@@ -17,10 +17,16 @@ router.post("/", [auth, validator(validate)], async (req, res) => {
 
   if (!agent || !agent.phone) {
     //If not agent provided then save customer info as customer
-    const dbCustomer = await Customer.findOne({
+    let dbCustomer = await Customer.findOne({
       name: customer.name,
       father: customer.father,
     });
+    
+    if (!dbCustomer && customer.phone) {
+      dbCustomer = await Customer.findOne({
+        phone: customer.phone,
+      });
+    }
 
     if (!dbCustomer) {
       //Save customer
