@@ -30,7 +30,7 @@ const inventorySchema = new mongoose.Schema({
   sr_no: { type: String, required: true },
   name: { type: String, required: true },
   customer: { type: userSchema, required: true },
-  agent: { type: userSchema, required: true },
+  agent: { type: userSchema },
   year: { type: Number, required: true },
   quantity: { type: Number, required: true },
   version: { type: Number, required: true, default: 1 },
@@ -53,23 +53,10 @@ function validateInventory(inventory) {
     date: Joi.date().required(),
     vouchar_no: Joi.number().min(0).required(),
     sr_no: Joi.string().required(),
+    // inventoryType: Joi.string().required().valid("RECEIVE", "DELIVERY"),
     name: Joi.string().min(3).max(50).required(),
-    customer: Joi.object().keys({
-      name: Joi.string().min(3).max(50).required(),
-      phone: Joi.string()
-        .length(11)
-        .regex(/^01[3-9][ ]?[0-9]{2}[ ]?[0-9]{3}[ ]?[0-9]{3}$/),
-      father: Joi.string().min(3).max(50).required(),
-      address: Joi.string(),
-    }),
-    agent: Joi.object().keys({
-      name: Joi.string().min(3).max(50).required(),
-      phone: Joi.string()
-        .length(11)
-        .regex(/^01[3-9][ ]?[0-9]{2}[ ]?[0-9]{3}[ ]?[0-9]{3}$/),
-      father: Joi.string().min(3).max(50).required(),
-      address: Joi.string(),
-    }),
+    customer: Joi.object().keys(userSchema).required(),
+    agent: Joi.object().keys(userSchema).allow(null).allow(''),
     year: Joi.number().min(0).required(),
     quantity: Joi.number().min(0).required()
   });
