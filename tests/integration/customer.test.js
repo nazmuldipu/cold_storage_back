@@ -123,14 +123,15 @@ describe("/api/customer", () => {
 
       await Customer.collection.insertMany(customers);
 
-      const res = await request(server).get("/api/customer");
+      let token = new User({ role: "USER" }).generateAuthToken();
+      const res = await request(server).get("/api/customer").set("x-auth-token", token);
 
       expect(res.status).toBe(200);
-      expect(res.body.length).toBe(4);
-      expect(res.body.some((g) => g.name === "customer1")).toBeTruthy();
-      expect(res.body.some((g) => g.name === "customer2")).toBeTruthy();
-      expect(res.body.some((g) => g.name === "customer3")).toBeTruthy();
-      expect(res.body.some((g) => g.name === "customer4")).toBeTruthy();
+      expect(res.body.docs.length).toBe(4);
+      expect(res.body.docs.some((g) => g.name === "customer1")).toBeTruthy();
+      expect(res.body.docs.some((g) => g.name === "customer2")).toBeTruthy();
+      expect(res.body.docs.some((g) => g.name === "customer3")).toBeTruthy();
+      expect(res.body.docs.some((g) => g.name === "customer4")).toBeTruthy();
     });
   });
 

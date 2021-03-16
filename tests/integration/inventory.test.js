@@ -4,7 +4,6 @@ const { User } = require("../../models/user");
 const { Customer } = require("../../models/customer");
 const { Agent } = require("../../models/agent");
 const mongoose = require("mongoose");
-const { required } = require("joi");
 let server;
 
 describe("/api/inventory", () => {
@@ -37,6 +36,7 @@ describe("/api/inventory", () => {
         .send({
           date,
           vouchar_no,
+          inventoryType,
           sr_no,
           name,
           customer,
@@ -77,6 +77,7 @@ describe("/api/inventory", () => {
 
     it("should return 200 if request is valid", async () => {
       const res = await exec();
+
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty("name", name);
     });
@@ -149,11 +150,14 @@ describe("/api/inventory", () => {
 
       await Inventory.collection.insertMany(inventories);
 
-      const res = await request(server).get("/api/inventory");
+      let token = new User({ role: "USER" }).generateAuthToken();
+      const res = await request(server)
+        .get("/api/inventory")
+        .set("x-auth-token", token);
       expect(res.status).toBe(200);
-      expect(res.body.length).toBe(2);
-      expect(res.body.some((g) => g.vouchar_no == 16)).toBeTruthy();
-      expect(res.body.some((g) => g.vouchar_no == 15)).toBeTruthy();
+      expect(res.body.docs.length).toBe(2);
+      expect(res.body.docs.some((g) => g.vouchar_no == 16)).toBeTruthy();
+      expect(res.body.docs.some((g) => g.vouchar_no == 15)).toBeTruthy();
     });
   });
 
@@ -213,6 +217,7 @@ describe("/api/inventory", () => {
         .set("x-auth-token", token)
         .send({
           date,
+          inventoryType,
           vouchar_no,
           sr_no,
           name,
@@ -226,7 +231,7 @@ describe("/api/inventory", () => {
     beforeEach(async () => {
       token = new User({ role: "ADMIN" }).generateAuthToken();
 
-      date = Date.now();
+      date = "Sun Mar 14 2021 21:06:11 GMT+0600";
       inventoryType = "RECEIVE";
       vouchar_no = 2;
       sr_no = "2/30";
@@ -247,7 +252,7 @@ describe("/api/inventory", () => {
       quantity = 50;
 
       //Previously load agent info into database
-      dbAgent = new Agent(agent);
+      let dbAgent = new Agent(agent);
       await dbAgent.save();
 
       const resp = await request(server)
@@ -255,6 +260,7 @@ describe("/api/inventory", () => {
         .set("x-auth-token", token)
         .send({
           date: "Sun Mar 14 2021 21:06:11 GMT+0600",
+          inventoryType: "RECEIVE",
           vouchar_no: 1,
           sr_no: "1/60",
           name: "Inventory1",
@@ -334,7 +340,6 @@ describe("/api/inventory", () => {
 
     it("should return 200 if inventory updated successfully", async () => {
       const res = await exec();
-
       const newIventory = await Inventory.findById(inventory._id);
 
       expect(res.status).toBe(200);

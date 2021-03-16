@@ -13,17 +13,29 @@ const options = {
 require("./startup/logging")();
 require("./startup/routes")(app);
 require("./startup/db")();
+require("./startup/prod")(app);
+// require("./startup/validation")();
 // require("./startup/prod")(app);
-require("./startup/validation")();
+
 
 app.get("/", (req, res) => {
   res.send({ message: "Weclome to Node REST API" });
 });
 
-var server = https.createServer(options, app);
-
-server.listen(port, () => {
+const server = app.listen(port, () => {
   winston.info(`Listening on port ${port}...`);
 });
+
+// var server = https.createServer(options, app);
+// server.listen(port, () => {
+//   winston.info(`Listening on port ${port}...`);
+// });
+
+
+module.exports = server;
+
+
+
+
 
 module.exports = server;
