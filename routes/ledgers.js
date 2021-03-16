@@ -88,6 +88,25 @@ router.get("/", [auth, pagiCheck], async (req, res) => {
   res.send(ledgers);
 });
 
+//TODO: write test
+/*GET Ledger by date range ID*/
+router.get("/daterange", [auth, pagiCheck], async (req, res) => {
+  var query = {
+    createdAt: { $gte: req.query.start, $lte: req.query.end },
+  };
+
+  const options = {
+    select: "sr_no customer agent year quantity rate service_amount loan_amount loan_rate loan_profit loan_payable emptyBag_quantity emptyBag_rate emptyBag_amount total_amount",
+    sort: req.query.sort,
+    page: req.query.page,
+    limit: 2000,
+  };
+
+  const ledgers = await Ledger.paginate(query, options);
+  res.send(ledgers);
+});
+
+
 /*READ a Ledger for request with id, method = GET*/
 router.get("/:id", validateObjectId, async (req, res) => {
   const ledger = await Ledger.findById(req.params.id);
