@@ -7,6 +7,9 @@
     "start": "node index",
     "test": "jest --verbose --testEnvironment=node --detectOpenHandles --forceExit --runInBand tests"
   },
+  "engines": {
+    "node": "14.15.5"
+  },
   "author": "Nazmul Alam",
   "license": "ISC",
   "dependencies": {
