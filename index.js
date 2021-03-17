@@ -22,14 +22,14 @@ app.get("/", (req, res) => {
   res.send({ message: "Weclome to Node REST API" });
 });
 
-const server = app.listen(port, () => {
-  winston.info(`Listening on port ${port}...`);
-});
-
-// var server = https.createServer(options, app);
-// server.listen(port, () => {
+// const server = app.listen(port, () => {
 //   winston.info(`Listening on port ${port}...`);
 // });
+
+var server = https.createServer(options, app);
+server.listen(port, () => {
+  winston.info(`Listening on port ${port}...`);
+});
 
 
 module.exports = server;
